@@ -28,11 +28,11 @@ from sklearn.svm import SVC
 #====================================================
 
 def main():
-	labelledData = readLabelledDataFromCSV('/Users/jithinpt/Documents/Acads/CS_229/Project/Datasets/Kaggle/fer2013/train_small.csv')
-	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData )
-	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-	trainSVM(pcaFeatureVectors, labelledData.labels)
-
+#	labelledData = readLabelledDataFromCSV('')
+#	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData )
+#	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
+#	trainSVM(pcaFeatureVectors, labelledData.labels)
+	print "Feature extraction"
 #====================================================
 # Helper functions. 
 #====================================================
@@ -44,7 +44,7 @@ def readLabelledDataFromCSV(fileName):
 	reader = csv.reader(fileHandle)
 
 	for row in reader:
-		labelStr, featureStr = row
+		labelStr, featureStr, tp = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
 		labelledData.addDataSample(label, features)
@@ -65,7 +65,8 @@ def mapRawFeaturesToPCAFeatures(labelledData):
 	print "PCA completed"
 	print len(pca.components_)
 
-	return pca.transform(labelledData.featureVectors)
+	#return pca.transform(labelledData.featureVectors)
+	return pca
 
 def readFeatureVectorsFromFile(fileName):
 	pass
