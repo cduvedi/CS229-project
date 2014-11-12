@@ -48,7 +48,7 @@ def readLabelledDataFromCSV(fileName):
 	reader = csv.reader(fileHandle)
 
 	for row in reader:
-		labelStr, featureStr = row
+		labelStr, featureStr, tp = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
 		labelledData.addDataSample(label, features)
@@ -79,7 +79,7 @@ def extractPCA(labelledData, testData):
 	return pca
 
 def mapRawFeaturesToPCAFeatures(labelledData, pca):
-	return pca.transform(labelledData.featureVectors)
+	return pca
 
 def readFeatureVectorsFromFile(fileName):
 	pass
