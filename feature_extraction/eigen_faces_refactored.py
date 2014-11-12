@@ -28,11 +28,15 @@ from sklearn.svm import SVC
 #====================================================
 
 def main():
-	labelledData = readLabelledDataFromCSV('/Users/jithinpt/Documents/Acads/CS_229/Project/Datasets/Kaggle/fer2013/train_small.csv')
-	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData )
+	labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
+	labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test.csv')
+	pca = extractPCA( labelledData, labelledTestData )
+	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
 	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-	trainSVM(pcaFeatureVectors, labelledData.labels)
-
+	classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
+	pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
+	testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+	
 #====================================================
 # Helper functions. 
 #====================================================
@@ -55,16 +59,26 @@ def readLabelledDataFromCSV(fileName):
 
 	return labelledData
 
-def mapRawFeaturesToPCAFeatures(labelledData):
-	randomFeatureVectors =  labelledData.getRandomFeatureVectors(numSamplesPerLabel = 10)
+def extractPCA(labelledData, testData):
+	#randomFeatureVectors =  labelledData.getRandomFeatureVectors(numSamplesPerLabel = 10)
+	randomFeatureVectors =  labelledData.featureVectors
 	randomFaceArray = numpy.array(randomFeatureVectors)
 	faceMean = numpy.mean(randomFaceArray, 0)
 	facesAdjusted = randomFaceArray - faceMean
+	for i in range(0, len(labelledData.featureVectors)):
+		for j in range(0, len(labelledData.featureVectors[i])):
+			labelledData.featureVectors[i][j] - labelledData.featureVectors[i][j] - faceMean[j]
 
-	pca = RandomizedPCA(n_components = 20, whiten=True).fit(facesAdjusted)
+	for i in range(0, len(testData.featureVectors)):
+		for j in range(0, len(testData.featureVectors[i])):
+			testData.featureVectors[i][j] = testData.featureVectors[i][j] - faceMean[j]
+
+	pca = RandomizedPCA(n_components = 65, whiten=True).fit(facesAdjusted)
 	print "PCA completed"
 	print len(pca.components_)
+	return pca
 
+def mapRawFeaturesToPCAFeatures(labelledData, pca):
 	return pca.transform(labelledData.featureVectors)
 
 def readFeatureVectorsFromFile(fileName):
@@ -78,10 +92,25 @@ def writeFeatureVectorsToFile(fileName, featureVectors):
 	fileHandle.close()
 
 def trainSVM(featureVectors, labels):
-	expr_classifier = svm.SVC()
+	expr_classifier = svm.SVC(C = 0.0001)
 	expr_classifier.fit(featureVectors, labels)
 	print("Number of support vectors")
 	print(expr_classifier.n_support_)
+	return expr_classifier
+
+def testSVM(testVectors, labels, classifier):
+	numCorrect = 0
+	index = 0
+	fileHandle = open('labels.txt', 'w')
+
+	for testVector in testVectors:
+		predictedLabel = classifier.predict(testVector)
+		fileHandle.write("%s \t %s \n" % (predictedLabel, labels[index]))
+		if (predictedLabel == labels[index]):
+			numCorrect = numCorrect + 1
+		index = index + 1	
+	print numCorrect
+	fileHandle.close()
 
 
 #====================================================
