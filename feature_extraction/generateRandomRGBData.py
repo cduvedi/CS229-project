@@ -1,12 +1,12 @@
 
 from random import Random
 
-NUM_SAMPLES_TO_GENERATE = 300
+NUM_SAMPLES_TO_GENERATE = 2000
 
 fileHandle = open('randomRGBSamples.csv', 'w')
 
 rand = Random()
-rand.seed(12345)
+rand.seed(54321)
 
 for i in range(NUM_SAMPLES_TO_GENERATE):
 	colorIndex = rand.randint(1,500) % 3
