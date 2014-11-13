@@ -28,14 +28,15 @@ from sklearn.svm import SVC
 #====================================================
 
 def main():
-	labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
-	labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test.csv')
-	pca = extractPCA( labelledData, labelledTestData )
-	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
-	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-	classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
-	pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
-	testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+	print "Hello World"
+#	labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
+#	labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test.csv')
+#	pca = extractPCA( labelledData, labelledTestData )
+#	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
+#	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
+#	classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
+#	pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
+#	testSVM(pcaTestVectors, labelledTestData.labels, classifier)
 	
 #====================================================
 # Helper functions. 
@@ -48,14 +49,14 @@ def readLabelledDataFromCSV(fileName):
 	reader = csv.reader(fileHandle)
 
 	for row in reader:
-		labelStr, featureStr, tp = row
+		labelStr, featureStr = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
 		labelledData.addDataSample(label, features)
 
 	# Debug purposes
-	for i in range(0, 7):
-		print len(labelledData.labelToFeatureVectors[i])
+	#for i in range(0, 7):
+#		print len(labelledData.labelToFeatureVectors[i])
 
 	return labelledData
 
@@ -79,7 +80,7 @@ def extractPCA(labelledData, testData):
 	return pca
 
 def mapRawFeaturesToPCAFeatures(labelledData, pca):
-	return pca
+	return pca.transform(labelledData.featureVectors)
 
 def readFeatureVectorsFromFile(fileName):
 	pass

@@ -11,21 +11,21 @@ import matplotlib.image
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage as nd
+from scipy.misc import toimage
 
 from skimage import data
 from skimage.util import img_as_float
 from skimage.filter import gabor_kernel
 
-import eigen_faces_refactored
+import eigen_faces_refactored as eig
 
 def compute_feats(image, kernels):
     feats = np.zeros((len(kernels), 2), dtype=np.double)
+    filtered_list = list();
     for k, kernel in enumerate(kernels):
-#	    print k, "Kernal_len ", len(kernel), "Image_len ", len(image.rank) 
 	    filtered = nd.convolve(image, kernel, mode='wrap')
-	    feats[k, 0] = filtered.mean()
-	    feats[k, 1] = filtered.var()
-    return feats
+	    filtered_list.append(filtered)
+    return filtered_list
 
 
 def match(feats, ref_feats):
@@ -43,47 +43,48 @@ def match(feats, ref_feats):
 kernels = []
 for theta in range(4):
     theta = theta / 4. * np.pi
-    for sigma in (1, 3):
-        for frequency in (0.05, 0.25):
+    for sigma in (5, 10):
+	# TODO: check effect of frequency on kernel size
+        #for frequency in (0.05, 0.25):
+        for frequency in (0.1, 0.2):
             kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
+			#print len(kernel), " ", len(kernel[0])
             kernels.append(kernel)
 
-labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('../Datasets/train_small.csv')
+labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('../Datasets/train_med.csv')
 
 trndata= []
 for i in range(0,len(labelledTrainData.featureVectors)):
 	trndata.append(labelledTrainData.featureVectors[i])
 
-print len(trndata), " ", len(trndata[0])
-trn_2D = np.reshape(np.array(trndata[0]), (48, 48))
+gabor_features = list()
+for ittr in range(0, len(trndata)):
+	print ittr
+	trn_2D = np.reshape(np.array(trndata[ittr]), (48, 48))
+	
+	# prepare reference features
+	ref_feats = np.zeros((3, len(kernels), 2), dtype=np.double)
+	
+	gab_images =  compute_feats(trn_2D, kernels)
+	avg_gab_image = np.zeros_like(gab_images[0])
+	for ittrImg in range(0, len(gab_images)):
+		avg_gab_image = avg_gab_image + gab_images[ittrImg]		
+	
+	avg_gab_image = avg_gab_image / len(gab_images)
+	
+	avg_gab_array = avg_gab_image.ravel()
+	gabor_features.append(avg_gab_array)
 
-shrink = (slice(0, None, 3), slice(0, None, 3))
-brick_1 = img_as_float(data.load('C:\Users\Auro\Documents\Acads\Autumn 14\CS229\Project\CS229-project\/feature_extraction\cg.jpg'))[shrink]
+print "Finished extracting gabor features"
 
-brick_11 = {}
+print "Going for dimensionality reduction using PCA"
+pca = RandomizedPCA(n_components = 20).fit(np.array(gabor_features))
+#toimage(avg_gab_image).show()
+#toimage(gab_images[0]).show()
 
-for i in range(0,len(brick_1)):
-	for j in range(0,len(brick_1[0])):
-		brick_11[i,j] = brick_1[i,j][1]*255
-
-brick = np.array(brick_11)
-
-image_names = ('brick')
-images = (brick)
-
-# prepare reference features
-ref_feats = np.zeros((3, len(kernels), 2), dtype=np.double)
-ref_feats[0, :, :] = compute_feats(trn_2D, kernels)
-
-print('Rotated images matched against references using Gabor filter banks:')
-
-print('original: brick, rotated: 30deg, match result: ') #, end='')
-feats = compute_feats(nd.rotate(trn_2D, 45, reshape=False), kernels)
-print(image_names[match(feats, ref_feats)])
-
-print('original: brick, rotated: 70deg, match result: ') #, end='')
-feats = compute_feats(nd.rotate(trn_2D, angle=70, reshape=False), kernels)
-print(image_names[match(feats, ref_feats)])
-
-
-
+pcaFeatureVectors = eig.mapRawFeaturesToPCAFeatures( labelledTrainData, pca )
+print pcaFeatureVectors
+#eig.writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
+classifier = eig.trainSVM(pcaFeatureVectors, labelledTrainData.labels)
+#pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
+#testSVM(pcaTestVectors, labelledTestData.labels, classifier)
