@@ -49,7 +49,7 @@ def readLabelledDataFromCSV(fileName):
 	reader = csv.reader(fileHandle)
 
 	for row in reader:
-		labelStr, featureStr = row
+		labelStr, featureStr, tp = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
 		labelledData.addDataSample(label, features)
