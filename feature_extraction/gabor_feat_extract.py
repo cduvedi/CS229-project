@@ -39,52 +39,60 @@ def match(feats, ref_feats):
     return min_i
 
 
-# prepare filter bank kernels
-kernels = []
-for theta in range(4):
-    theta = theta / 4. * np.pi
-    for sigma in (5, 10):
-	# TODO: check effect of frequency on kernel size
-        #for frequency in (0.05, 0.25):
-        for frequency in (0.1, 0.2):
-            kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
-			#print len(kernel), " ", len(kernel[0])
-            kernels.append(kernel)
+def gabor():
+	# prepare filter bank kernels
+	kernels = []
+	for theta in range(4):
+	    theta = theta / 4. * np.pi
+	    for sigma in (5, 10):
+		# TODO: check effect of frequency on kernel size
+	        #for frequency in (0.05, 0.25):
+	        for frequency in (0.1, 0.2):
+	            kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
+	            kernels.append(kernel)
 
-labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('../Datasets/train_med.csv')
+	fileHandle = open('../Datasets/train.csv', 'r')
+	reader = csv.reader(fileHandle)
 
-trndata= []
-for i in range(0,len(labelledTrainData.featureVectors)):
-	trndata.append(labelledTrainData.featureVectors[i])
+	#gabor_features = list()
+	for row in reader:
+		labelStr, featureStr, tp = row
+		label = int(labelStr)
+		features = map(lambda x: float(x), featureStr.split(' '))
+		
+		trn_2D = np.reshape(np.array(features), (48, 48))
+		
+		gab_images =  compute_feats(trn_2D, kernels)
+		avg_gab_image = np.zeros_like(gab_images[0])
+		
+		for ittrImg in range(0, len(gab_images)):
+			avg_gab_image = avg_gab_image + gab_images[ittrImg]		
+		
+		avg_gab_image = avg_gab_image / len(gab_images)
+		avg_gab_array = avg_gab_image.ravel()
 
-gabor_features = list()
-for ittr in range(0, len(trndata)):
-	print ittr
-	trn_2D = np.reshape(np.array(trndata[ittr]), (48, 48))
+		#gabor_features.append(avg_gab_array)
+		#print len(gabor_features)
+
+		with open("gabor_feats.csv", "a") as f:
+			writer = csv.writer(f)
+			writer.writerow(avg_gab_array)
+
+	fileHandle.close()
+
+	print "Finished extracting gabor features"
+
+#	print "Going for dimensionality reduction using PCA"
+#	pca = RandomizedPCA(n_components = 65).fit(np.array(gabor_features))
+	#toimage(avg_gab_image).show()
+	#toimage(gab_images[0]).show()
 	
-	# prepare reference features
-	ref_feats = np.zeros((3, len(kernels), 2), dtype=np.double)
-	
-	gab_images =  compute_feats(trn_2D, kernels)
-	avg_gab_image = np.zeros_like(gab_images[0])
-	for ittrImg in range(0, len(gab_images)):
-		avg_gab_image = avg_gab_image + gab_images[ittrImg]		
-	
-	avg_gab_image = avg_gab_image / len(gab_images)
-	
-	avg_gab_array = avg_gab_image.ravel()
-	gabor_features.append(avg_gab_array)
+#	pcaFeatureVectors = eig.mapRawFeaturesToPCAFeatures( labelledTrainData, pca )
 
-print "Finished extracting gabor features"
-
-print "Going for dimensionality reduction using PCA"
-pca = RandomizedPCA(n_components = 20).fit(np.array(gabor_features))
-#toimage(avg_gab_image).show()
-#toimage(gab_images[0]).show()
-
-pcaFeatureVectors = eig.mapRawFeaturesToPCAFeatures( labelledTrainData, pca )
-print pcaFeatureVectors
+#	return(pca, pcaFeatureVectors)
 #eig.writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-classifier = eig.trainSVM(pcaFeatureVectors, labelledTrainData.labels)
+#classifier = eig.trainSVM(pcaFeatureVectors, labelledTrainData.labels)
 #pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
 #testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+
+gabor()
