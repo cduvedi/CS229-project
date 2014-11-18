@@ -28,15 +28,15 @@ from sklearn.svm import SVC
 #====================================================
 
 def main():
-	print "Hello World"
-#	labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
-#	labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test.csv')
-#	pca = extractPCA( labelledData, labelledTestData )
-#	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
-#	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-#	classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
-#	pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
-#	testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+	labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
+	labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test_small.csv')
+	pca = extractPCA( labelledData, labelledTestData )
+	pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
+	writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
+	classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
+	pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
+	testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+	testSVM(pcaFeatureVectors, labelledData.labels, classifier)
 	
 #====================================================
 # Helper functions. 
@@ -55,8 +55,8 @@ def readLabelledDataFromCSV(fileName):
 		labelledData.addDataSample(label, features)
 
 	# Debug purposes
-	#for i in range(0, 7):
-#		print len(labelledData.labelToFeatureVectors[i])
+	for i in range(0, 7):
+		print len(labelledData.labelToFeatureVectors[i])
 
 	return labelledData
 
@@ -93,10 +93,15 @@ def writeFeatureVectorsToFile(fileName, featureVectors):
 	fileHandle.close()
 
 def trainSVM(featureVectors, labels):
-	expr_classifier = svm.SVC(C = 0.0001)
+	param_grid = {'C': [1e3, 5e3], 'gamma': [0.0001, 0.1], }
+	#param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
+	expr_classifier = GridSearchCV(svm.SVC(kernel='rbf', class_weight='auto'), param_grid)
+#	expr_classifier = svm.SVC(C = 0.0001)
 	expr_classifier.fit(featureVectors, labels)
-	print("Number of support vectors")
-	print(expr_classifier.n_support_)
+#	print("Number of support vectors")
+#	print(expr_classifier.n_support_)
+	print("Best estimator found by grid search:")
+	print(clf.best_estimator_)
 	return expr_classifier
 
 def testSVM(testVectors, labels, classifier):
