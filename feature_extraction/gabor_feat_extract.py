@@ -39,7 +39,7 @@ def match(feats, ref_feats):
     return min_i
 
 
-def gabor(labelledTrainData):
+def gabor():
 	# prepare filter bank kernels
 	kernels = []
 	for theta in range(4):
@@ -51,38 +51,48 @@ def gabor(labelledTrainData):
 	            kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
 	            kernels.append(kernel)
 
-	gabor_features = list()
-	for ittr in range(0, len(labelledTrainData.featureVectors)):
-		trn_2D = np.reshape(np.array(labelledTrainData.featureVectors[ittr]), (48, 48))
+	fileHandle = open('../Datasets/train.csv', 'r')
+	reader = csv.reader(fileHandle)
+
+	#gabor_features = list()
+	for row in reader:
+		labelStr, featureStr, tp = row
+		label = int(labelStr)
+		features = map(lambda x: float(x), featureStr.split(' '))
 		
-		# prepare reference features
-		ref_feats = np.zeros((3, len(kernels), 2), dtype=np.double)
+		trn_2D = np.reshape(np.array(features), (48, 48))
 		
 		gab_images =  compute_feats(trn_2D, kernels)
 		avg_gab_image = np.zeros_like(gab_images[0])
+		
 		for ittrImg in range(0, len(gab_images)):
 			avg_gab_image = avg_gab_image + gab_images[ittrImg]		
 		
 		avg_gab_image = avg_gab_image / len(gab_images)
-		
 		avg_gab_array = avg_gab_image.ravel()
-		gabor_features.append(avg_gab_array)
+
+		#gabor_features.append(avg_gab_array)
+		#print len(gabor_features)
+
+		with open("gabor_feats.csv", "a") as f:
+			writer = csv.writer(f)
+			writer.writerow(avg_gab_array)
+
+	fileHandle.close()
 
 	print "Finished extracting gabor features"
 
-	with open("gabor_feats.csv", "wb") as f:
-		writer = csv.writer(f)
-		writer.writerows(gabor_features)
-	
-	print "Going for dimensionality reduction using PCA"
-	pca = RandomizedPCA(n_components = 65).fit(np.array(gabor_features))
+#	print "Going for dimensionality reduction using PCA"
+#	pca = RandomizedPCA(n_components = 65).fit(np.array(gabor_features))
 	#toimage(avg_gab_image).show()
 	#toimage(gab_images[0]).show()
 	
-	pcaFeatureVectors = eig.mapRawFeaturesToPCAFeatures( labelledTrainData, pca )
+#	pcaFeatureVectors = eig.mapRawFeaturesToPCAFeatures( labelledTrainData, pca )
 
-	return(pca, pcaFeatureVectors)
+#	return(pca, pcaFeatureVectors)
 #eig.writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
 #classifier = eig.trainSVM(pcaFeatureVectors, labelledTrainData.labels)
 #pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
 #testSVM(pcaTestVectors, labelledTestData.labels, classifier)
+
+gabor()
