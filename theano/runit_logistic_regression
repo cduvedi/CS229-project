@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#BATCHARGS
+#SBATCH --gres=gpu:1
+#SBATCH --partition=defq
+
+module load shared
+module load cuda60/toolkit
+#SBATCH --gres=gpu:1
+#SBATCH --partition=defq
+
+module load shared
+module load cuda60/toolkit
+#SBATCH --gres=gpu:1
+#SBATCH --partition=defq
+
+module load shared
+module load cuda60/toolkit
+
+./logistic_regression.py
