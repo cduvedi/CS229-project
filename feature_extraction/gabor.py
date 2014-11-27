@@ -39,6 +39,8 @@ def match(feats, ref_feats):
             min_i = i
     return min_i
 
+start_row_no = 3
+end_row_no = 10
 
 def gabor():
 	# prepare filter bank kernels
@@ -58,7 +60,15 @@ def gabor():
 	grid_img = Image.new('P', (432, 384))
 
 	gab_file = open('gabor_feats.csv', 'w')
+	row_no = 1
 	for row in reader:
+		if (row_no < start_row_no):
+			row_no = row_no + 1
+			continue
+
+                if (row_no > end_row_no):
+			break
+
 		labelStr, featureStr, tp = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
@@ -75,6 +85,7 @@ def gabor():
 				pixels_str = pixels_str + (" %.4f" % pixel)
 				#gab_file.write(s + ' ')
 		gab_file.write(pixels_str.lstrip() + '\n')
+		row_no = row_no + 1
 		#gab_file.write('\n')
 	gab_file.close()	
 	#for i in range(0, 9):
