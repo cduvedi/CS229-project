@@ -51,7 +51,7 @@ def gabor():
 	        kernel = np.real(gabor_kernel(frequency, theta=theta, sigma_x=sigma, sigma_y=sigma))
 	        kernels.append(kernel)
 
-	fileHandle = open('../Datasets/train.csv', 'r')
+	fileHandle = open('train_small.csv', 'r')
 	reader = csv.reader(fileHandle)
 
 	#gabor_features = list()
@@ -59,7 +59,7 @@ def gabor():
 
 	gab_file = open('gabor_feats.csv', 'w')
 	for row in reader:
-		labelStr, featureStr = row
+		labelStr, featureStr, tp = row
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
 		
@@ -68,11 +68,14 @@ def gabor():
 		gab_images =  compute_feats(trn_2D, kernels)
 		#with open("gabor_feats.csv", "a") as f:
 		gab_file.write(labelStr + ',')
+		pixels_str = ""
 		for img in gab_images:
 			img_array = img.ravel()
 			for pixel in img_array:
-				gab_file.write(str(pixel) + ' ')
-		gab_file.write('\n')
+				pixels_str = pixels_str + (" %.4f" % pixel)
+				#gab_file.write(s + ' ')
+		gab_file.write(pixels_str.lstrip() + '\n')
+		#gab_file.write('\n')
 	gab_file.close()	
 	#for i in range(0, 9):
 #		for j in range(0, 8):
