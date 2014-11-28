@@ -11,7 +11,6 @@ import random
 import pylab as pl
 from sklearn.decomposition import RandomizedPCA
 import eigen_faces_refactored
-import gabor_feat_extract as gab
 
 ###################################
 # Use features from PCA extraction
@@ -27,14 +26,17 @@ import gabor_feat_extract as gab
 # Use features from Gabor filter
 ###################################
 
-print "Gabor Feature extraction"
-labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('../Datasets/train.csv')
-pcaTrain, pcaTrainFeatureVectors = gab.gabor(labelledTrainData)
-
-labelledTestData = eigen_faces_refactored.readLabelledDataFromCSV('../Datasets/test.csv')
+print "Read Gabor Features"
+#labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('gabor_feats.csv')
+#labelledTestData = eigen_faces_refactored.readLabelledDataFromCSV('gabor_feats_test_small.csv')
+labelledTrainData = eigen_faces_refactored.readLabelledDataFromCSV('gabor_feats_replaced.csv')
+labelledTestData = eigen_faces_refactored.readLabelledDataFromCSV('gabor_feats_test_med_replaced.csv')
+print "Perform PCA transform"
+pcaTrain = eigen_faces_refactored.extractPCA(labelledTrainData)
+pcaTrainFeatureVectors = pcaTrain.transform(labelledTrainData.featureVectors)
+print "pcaTrainFeatureVectors length", len(pcaTrainFeatureVectors)
 pcaTestFeatureVectors = pcaTrain.transform(labelledTestData.featureVectors)
-
-
+print "pcaTestFeatureVectors length", len(pcaTestFeatureVectors)
 ###########################################################################
 #	Neural Network
 ###########################################################################
