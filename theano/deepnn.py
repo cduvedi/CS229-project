@@ -165,46 +165,46 @@ def evaluate_lenet5(learning_rate=0.1, n_epochs=200,
     layer0_input = x.reshape((batch_size, 1, 48, 48))
 
     # Construct the first convolutional pooling layer:
-    # filtering reduces the image size to (48-5+1 , 48-5+1) = (44, 44)
-    # maxpooling reduces this further to (44/2, 44/2) = (22, 22)
-    # 4D output tensor is thus of shape (batch_size, nkerns[0], 22, 22)
+    # filtering reduces the image size to (48-9+1 , 48-9+1) = (40, 40)
+    # maxpooling reduces this further to (40/2, 40/2) = (20, 20)
+    # 4D output tensor is thus of shape (batch_size, nkerns[0], 20, 20)
     layer0 = LeNetConvPoolLayer(
         rng,
         input=layer0_input,
         image_shape=(batch_size, 1, 48, 48),
-        filter_shape=(nkerns[0], 1, 5, 5),
+        filter_shape=(nkerns[0], 1, 9, 9),
         poolsize=(2, 2)
     )
 
     # Construct the second convolutional pooling layer
-    # filtering reduces the image size to (22-5+1, 22-5+1) = (18, 18)
-    # maxpooling reduces this further to (18/2, 18/2) = (9, 9)
-    # 4D output tensor is thus of shape (nkerns[0], nkerns[1], 9, 9)
+    # filtering reduces the image size to (20-9+1, 20-0+1) = (12, 12)
+    # maxpooling reduces this further to (12/2, 12/2) = (6, 6)
+    # 4D output tensor is thus of shape (nkerns[0], nkerns[1], 6, 6)
     layer1 = LeNetConvPoolLayer(
         rng,
         input=layer0.output,
-        image_shape=(batch_size, nkerns[0], 22, 22),
-        filter_shape=(nkerns[1], nkerns[0], 5, 5),
+        image_shape=(batch_size, nkerns[0], 20, 20),
+        filter_shape=(nkerns[1], nkerns[0], 9, 9),
         poolsize=(2, 2)
     )
 
     # the HiddenLayer being fully-connected, it operates on 2D matrices of
     # shape (batch_size, num_pixels) (i.e matrix of rasterized images).
-    # This will generate a matrix of shape (batch_size, nkerns[1] * 9 * 9),
-    # or (500, 50 * 9 * 9) = (500, 4050) with the default values.
+    # This will generate a matrix of shape (batch_size, nkerns[1] * 6 * 6),
+    # or (500, 50 * 6 * 6) = (500, 1800) with the default values.
     layer2_input = layer1.output.flatten(2)
 
     # construct a fully-connected sigmoidal layer
     layer2 = HiddenLayer(
         rng,
         input=layer2_input,
-        n_in=nkerns[1] * 9 * 9,
-        n_out=250,
+        n_in=nkerns[1] * 6 * 6,
+        n_out=300,
         activation=T.tanh
     )
 
     # classify the values of the fully-connected sigmoidal layer
-    layer3 = LogisticRegression(input=layer2.output, n_in=250, n_out=7)
+    layer3 = LogisticRegression(input=layer2.output, n_in=300, n_out=7)
 
     # the cost we minimize during training is the NLL of the model
     cost = layer3.negative_log_likelihood(y)
