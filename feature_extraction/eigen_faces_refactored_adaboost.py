@@ -42,7 +42,7 @@ def main():
 # Helper functions. 
 #====================================================
 
-def readLabelledDataFromCSV(fileName):
+def readLabelledDataFromCSV(fileName, size):
 	labelledData = LabelledData()
 
 	print "fileName: ", fileName
@@ -53,7 +53,12 @@ def readLabelledDataFromCSV(fileName):
 		labelStr, featureStr = row.split(',')
 		label = int(labelStr)
 		features = map(lambda x: float(x), featureStr.split(' '))
-		labelledData.addDataSample(label, features)
+		if size == 0:
+			labelledData.addDataSample(label, features[0:36*2304])
+		elif size == 1:
+			labelledData.addDataSample(label, features[36*2304:72*2304])
+		elif size == 2:
+			labelledData.addDataSample(label, features)
 
 	# Debug purposes
 	#for i in range(0, 7):
