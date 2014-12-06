@@ -2,7 +2,7 @@
 
 import sys
 
-IMAGE_ROW_SIZE = 3 
+IMAGE_ROW_SIZE = 48 
 GABOR_FILTER_SIZE = IMAGE_ROW_SIZE * IMAGE_ROW_SIZE
 
 def main():
@@ -14,6 +14,10 @@ def main():
 		feature_vector_file = sys.argv[2]
 		output_file = sys.argv[3]
 		include_neighbor_pixels = bool(int(sys.argv[4]))
+		print "Feature impotance file: ", feature_imp_file
+		print "Dataset: ", feature_vector_file
+		print "Output file:  ", output_file
+		print "Neighours: ", include_neighbor_pixels
 
 		sorted_feature_indices = getSortedFeatureIndices(feature_imp_file, include_neighbor_pixels)
 		extract_selected_features(feature_vector_file, sorted_feature_indices, output_file)
@@ -40,7 +44,7 @@ def getSortedFeatureIndices(feature_imp_file, include_neighbor_pixels):
 	return lst
 
 def extract_selected_features(feature_vector_file, selected_feature_indices, output_file):
-	out_file = open(output_file, 'w')
+	out_file = open(output_file, 'a')
 	inp_file = open(feature_vector_file, 'r')
 
 	for row in inp_file:
