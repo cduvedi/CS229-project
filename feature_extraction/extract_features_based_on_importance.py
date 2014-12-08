@@ -51,8 +51,8 @@ def extract_selected_features(feature_vector_file, selected_feature_indices, out
 		label, feature_str = row.split(",")
 		orig_features = feature_str.split(" ")
 		selected_features = filter_features_by_index(orig_features, selected_feature_indices)
-		s = reduce(lambda x,y : x + "," + y, selected_features)
-		out_file.write(label + "," + s)
+		s = reduce(lambda x,y : x + " " + y, selected_features)
+		out_file.write(label + "," + s + '\n')
 
 	inp_file.close()
 	out_file.close()
