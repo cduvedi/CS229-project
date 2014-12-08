@@ -18,6 +18,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.decomposition import RandomizedPCA
 from sklearn import svm
 from sklearn.svm import SVC
+from sklearn.externals import joblib
 
 #====================================================
 # Terminology used:
@@ -32,31 +33,58 @@ from sklearn.svm import SVC
 
 def main():
 	num_args = len(sys.argv)
-	if (num_args > 2) :
+	if (num_args > 5) :
 		training_set_file = sys.argv[1]
 		test_set_file = sys.argv[2]
+		enable_training = bool(int(sys.argv[3]))
+		enable_testing = bool(int(sys.argv[4]))
+		compute_pca = bool(int(sys.argv[5]))
+		svm_params_file = sys.argv[6] if (num_args > 6) else ""
+
+		if ((not enable_training) and (svm_params_file == "")):
+			print("[ERROR]: Since training has been disabled, you need to provide an SVM parameters file")
+			sys.exit()
 
 		print("Training set : " + training_set_file)
 		print("Test set     : " + test_set_file)
+		print("Enable training : " + str(enable_training))
+		print("Enable testing  : " + str(enable_testing))
+		print("Compute PCA     : " + str(compute_pca))
+		print("SVM params file : " + svm_params_file)
 
-		#labelledData = readLabelledDataFromCSV('/root/CS229-project/Datasets/train_small.csv')
-		#labelledTestData = readLabelledDataFromCSV('/root/CS229-project/Datasets/test_small.csv')
-
-		labelledData = readLabelledDataFromCSV(training_set_file)
+		labelledTrainingData = readLabelledDataFromCSV(training_set_file)
 		labelledTestData = readLabelledDataFromCSV(test_set_file)
-		pca = extractPCA( labelledData, labelledTestData )
-		pcaFeatureVectors = mapRawFeaturesToPCAFeatures( labelledData, pca )
+		trainingFeatureVectors = labelledTrainingData.featureVectors
+		testFeatureVectors = labelledTestData.featureVectors
+		trainingSetFileName = os.path.basename(training_set_file).split(".")[0]
 
-		#writeFeatureVectorsToFile('train.feat', pcaFeatureVectors)
-		writeFeatureVectorsToFile(os.path.basename(training_set_file).split(".")[0] + "_pca.csv", pcaFeatureVectors)
-		classifier = trainSVM(pcaFeatureVectors, labelledData.labels)
-		pcaTestVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
-		testSVM(pcaTestVectors, labelledTestData.labels, classifier)
-		testSVM(pcaFeatureVectors, labelledData.labels, classifier)
+		if (compute_pca):
+			print("Computing PCA and projecting training and test sets to PCA space")
+			pca = extractPCA( labelledTrainingData, labelledTestData )
+			trainingFeatureVectors = mapRawFeaturesToPCAFeatures( labelledTrainingData, pca )
+			testFeatureVectors = mapRawFeaturesToPCAFeatures( labelledTestData, pca )
+			writeFeatureVectorsToFile(trainingSetFileName + "_pca.csv", trainingFeatureVectors)
+		else:
+			print("Skipping PCA calculation")
+
+		classifier = ()
+		if (enable_training):
+			print("Training SVM")
+			classifier = trainSVM(trainingFeatureVectors, labelledTrainingData.labels)
+			dumpSVMParametersToFile(classifier, trainingSetFileName + ".svm")
+		else:
+			print("Reading SVM parameters from file '" + svm_params_file + "'")
+			classifier = readSVMParametersFromFile(svm_params_file)
+
+		if (enable_testing):
+			print("Running the trained SVM on the test set")
+			testSVM(testFeatureVectors, labelledTestData.labels, classifier)
+		else:
+			print("Skipping testing")
 	else:
 		print("Invalid number of args")
 		print("Run the script as follows:")
-		print("         <script> <trainingSet> <testSet>")
+		print("         <script> <trainingSet> <testSet> <enable_training> <enable_testing> <compute_pca> <svm_params_file (Required if training is disabled)>")
 	
 #====================================================
 # Helper functions. 
@@ -83,7 +111,6 @@ def readLabelledDataFromCSV(fileName):
 	return labelledData
 
 def extractPCA(labelledData, testData):
-	#randomFeatureVectors =  labelledData.getRandomFeatureVectors(numSamplesPerLabel = 10)
 	randomFeatureVectors =  labelledData.featureVectors
 	randomFaceArray = numpy.array(randomFeatureVectors)
 	faceMean = numpy.mean(randomFaceArray, 0)
@@ -141,6 +168,11 @@ def testSVM(testVectors, labels, classifier):
 	print("# of correct labels in test set: " + str(numCorrect))
 	fileHandle.close()
 
+def readSVMParametersFromFile(fileName):
+	return joblib.load(fileName)
+
+def dumpSVMParametersToFile(classifier, fileName):
+	joblib.dump(classifier, fileName)
 
 #====================================================
 # LabelledData class
